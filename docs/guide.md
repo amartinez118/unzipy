@@ -52,10 +52,16 @@ from unzipy.fitting import Model, fit, ss_wlc, ewlc, trap
 
 model = Model(ewlc(label="handles"), ss_wlc(), trap())
 report = fit(
-    model, f, x,                       # force (pN), extension (nm)
+    model,
+    f,
+    x,  # force (pN), extension (nm)
     start={"handles.L": 250.0, "ss.n": 40.0, "trap.k0": 0.07},
-    fixed={"handles.p": 20.0, "handles.Y": 200.0, "ss.d0": 0.665,
-           "ss.p": 0.75},
+    fixed={
+        "handles.p": 20.0,
+        "handles.Y": 200.0,
+        "ss.d0": 0.665,
+        "ss.p": 0.75,
+    },
 )
 print(report.summary())
 ci = report.bootstrap(n_boot=500, rng=0)["ci"]
