@@ -77,6 +77,9 @@ STARTS = {
     "ss_wlc": {"n": 30.0, "p": 1.0},
     "ss_fjc": {"n": 30.0, "b": 1.0},
 }
+# The freely jointed chain with a free offset has a nearly flat valley in
+# (L, b, shift) over a narrow force range, so physical limits are needed.
+BOUNDS = {"fjc": {"L": (1.0, 1000.0), "b": (0.1, 20.0)}}
 
 
 @pytest.mark.parametrize("name", CASES)
@@ -85,9 +88,10 @@ def test_models_recover_parameters_in_both_variables(name):
     rng = np.random.default_rng(1)
     start = dict(STARTS[name])
     fixed = {"d0": truth["d0"]} if "d0" in truth else None
+    bounds = BOUNDS.get(name)
     # x(f): noise on the extension
     x = noisy(model, truth, sigma, rng)
-    r = fit(model, F, x, start=start, fixed=fixed, sigma=sigma)
+    r = fit(model, F, x, start=start, fixed=fixed, bounds=bounds, sigma=sigma)
     assert r.success
     within(r, truth)
     np.testing.assert_allclose(r.predict(F), model.extension(F, truth), atol=3)
@@ -101,6 +105,7 @@ def test_models_recover_parameters_in_both_variables(name):
         variable="f(x)",
         start=start,
         fixed=fixed,
+        bounds=bounds,
         sigma=0.2,
     )
     assert r2.success and r2.variable == "f(x)"
