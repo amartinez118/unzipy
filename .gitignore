@@ -1,6 +1,6 @@
 __pycache__/
 *.egg-info/
-.venv/
+.venv
 .pytest_cache/
 .ruff_cache/
 .coverage
@@ -8,3 +8,4 @@ htmlcov/
 .DS_Store
 dist/
 build/
+.venv.nosync/
