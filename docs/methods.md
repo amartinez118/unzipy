@@ -52,6 +52,21 @@ the Shimazaki–Shinomoto bandwidth (J. Comput. Neurosci. 29, 171 (2010)); Grubb
 tests; Gaussian mixtures by EM (histogram-weighted EM with Sheppard's correction for very large
 samples).
 
+## Fitting — `unzipy.fitting`
+
+`Model(*elements)` puts elastic elements in series (their extensions add at a
+given force, plus an optional constant `shift`): `wlc` (optionally with the
+Bouchiat correction), `ewlc` (scaled `Lc(1+f/Y)` or additive), `fjc`, `efjc`,
+`dipole` (hairpin diameter), `trap` (stiffness `k0 + alpha f`) and the strand
+elements `ss_wlc`/`ss_fjc` parametrised by the number of nucleotides.
+`fit(model, f, x)` minimises, by trust-region least squares, either the
+extension residuals (`variable="x(f)"`, noise on the extension) or the force
+residuals (`variable="f(x)"`, noise on the force; the model is inverted by
+bisection). Parameters can be free, fixed or bounded; the covariance comes from
+the Jacobian (rescaled by the reduced chi-square unless `absolute_sigma`).
+`FitReport.bootstrap` gives pair-bootstrap intervals and `compare` ranks fits by
+AIC/BIC with Akaike weights.
+
 ## Unzipping — `unzipy.unzipping`
 
 - **Alignment**: force levels discretised into letters and aligned globally with Needleman–Wunsch
@@ -86,6 +101,7 @@ and measurement noise from the trap–molecule series stiffness.
 | force ensemble | independent numerical construction of a quasi-static two-state protocol |
 | position ensemble | Table 1 of J. Stat. Mech. (2019) 124001 (`dW_m` 17.3 vs 17.4 kT, `dW_h + dW_b` 224 vs 225 kT); *the zero-force bookkeeping is otherwise only checked for self-consistency* |
 | dissipated work | small-rate limit and the published `Ω = 0.55` example; the full integral is not independently checked |
+| fitting | parameter recovery for every model in both variables, calibrated uncertainties and bootstrap coverage, AIC/BIC selecting the true model |
 | rupture rates | Bell–Evans samples (unfolding and refolding directions) |
 | equilibrium FDC | `<f> = dF/dλ` by finite differences |
 | landscape | MFOLD stacking energies to within 0.015 kcal/mol |

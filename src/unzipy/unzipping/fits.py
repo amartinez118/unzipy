@@ -1,14 +1,15 @@
-"""Fits of force-extension data to polymer models."""
+"""Fits of force-extension data to single-strand polymer models.
+
+Convenience wrappers around the general fitters of :mod:`unzipy.fitting`:
+the strand is in series with an optical trap of known stiffness.
+"""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-import numpy as np
-from scipy.optimize import least_squares
-
 from ..constants import KT25
-from ..polymer import fjc_extension, wlc_extension
+from ..fitting import Model, fit, fjc, trap, wlc
 
 
 @dataclass
@@ -26,43 +27,43 @@ class FitResult:
     residual_rms: float
 
 
-def _fit(model, names, p0, f, x, bounds=(-np.inf, np.inf)):
-    """Fit a model by non-linear least squares.
+def _strand_fit(element, label, f, x, contour, k_trap, kT, shift0, p0, fit_L):
+    """Fit one strand element in series with a trap.
 
     Args:
-        model (callable): ``model(params, f)`` returning the extension.
-        names (list[str]): Parameter names.
-        p0 (list[float]): Initial values.
-        f (numpy.ndarray): Forces (pN).
-        x (numpy.ndarray): Extensions (nm).
-        bounds (tuple): Lower and upper bounds.
+        element (callable): Element factory (``wlc`` or ``fjc``).
+        label (str): Name of the strand length parameter in the result
+            (``"P"`` or ``"b"``).
+        f (array-like): Force (pN).
+        x (array-like): Extension (nm).
+        contour (float): Contour length (nm).
+        k_trap (float): Trap stiffness (pN/nm).
+        kT (float): Thermal energy (pN nm).
+        shift0 (float): Initial shift (nm).
+        p0 (float): Initial persistence or Kuhn length (nm).
+        fit_L (bool): Also fit the contour length.
 
     Returns:
         FitResult: Parameters, errors and residual.
-
-    Raises:
-        ValueError: If there are not more data points than parameters.
     """
-    if x.size <= len(p0):
-        raise ValueError(
-            f"need more than {len(p0)} data points for "
-            f"{len(p0)} free parameters"
-        )
-    res = least_squares(
-        lambda p: model(p, f) - x,
-        p0,
-        method="trf",
-        bounds=bounds,
-        x_scale="jac",
-    )
-    dof = max(x.size - len(p0), 1)
-    s2 = np.sum(res.fun**2) / dof
-    cov = np.linalg.pinv(res.jac.T @ res.jac) * s2
-    return FitResult(
-        dict(zip(names, res.x, strict=True)),
-        dict(zip(names, np.sqrt(np.diag(cov)), strict=True)),
-        float(np.sqrt(np.mean(res.fun**2))),
-    )
+    model = Model(element("s"), trap("t"), kT=kT)
+    name = "p" if label == "P" else "b"
+    fixed = {"t.k0": k_trap}
+    start = {"shift": shift0, f"s.{name}": p0, "s.L": contour}
+    if not fit_L:
+        fixed["s.L"] = contour
+    report = fit(model, f, x, start=start, fixed=fixed)
+    params = {
+        "shift": report.values["shift"],
+        label: report.values[f"s.{name}"],
+    }
+    errors = {
+        "shift": report.errors["shift"],
+        label: report.errors[f"s.{name}"],
+    }
+    if fit_L:
+        params["L"], errors["L"] = report.values["s.L"], report.errors["s.L"]
+    return FitResult(params, errors, report.rms)
 
 
 def fit_ssdna_wlc(
@@ -84,24 +85,12 @@ def fit_ssdna_wlc(
 
     Returns:
         FitResult: Fitted ``shift`` and ``P`` (and ``L``).
+
+    Raises:
+        ValueError: If there are not more data points than parameters.
     """
-    f, x = np.asarray(f, float), np.asarray(x, float)
-    if fit_contour:
-        return _fit(
-            lambda p, f: p[0] + p[2] * wlc_extension(f, p[1], kT) + f / k_trap,
-            ["shift", "P", "L"],
-            [*p0, contour],
-            f,
-            x,
-            ([-np.inf, 1e-3, 1e-3], np.inf),
-        )
-    return _fit(
-        lambda p, f: p[0] + contour * wlc_extension(f, p[1], kT) + f / k_trap,
-        ["shift", "P"],
-        list(p0),
-        f,
-        x,
-        ([-np.inf, 1e-3], np.inf),
+    return _strand_fit(
+        wlc, "P", f, x, contour, k_trap, kT, p0[0], p0[1], fit_contour
     )
 
 
@@ -121,13 +110,10 @@ def fit_ssdna_fjc(f, x, contour, k_trap=0.077, kT=KT25, p0=(0.0, 1.5)):
 
     Returns:
         FitResult: Fitted ``shift`` and ``b``.
+
+    Raises:
+        ValueError: If there are not more data points than parameters.
     """
-    f, x = np.asarray(f, float), np.asarray(x, float)
-    return _fit(
-        lambda p, f: p[0] + fjc_extension(f, p[1], contour, kT) + f / k_trap,
-        ["shift", "b"],
-        list(p0),
-        f,
-        x,
-        ([-np.inf, 1e-3], np.inf),
+    return _strand_fit(
+        fjc, "b", f, x, contour, k_trap, kT, p0[0], p0[1], False
     )
