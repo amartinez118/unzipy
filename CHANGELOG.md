@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Property-based tests (hypothesis) of the WLC/FJC, Jarzynski/Bennett and
+  bias invariants.
+
 ## 0.1.0 (unreleased)
 
 First public version: polymer elasticity; Jarzynski (with bias correction), Bennett and Crooks
