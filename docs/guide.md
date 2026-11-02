@@ -71,6 +71,20 @@ Contour lengths, the offset `shift` and the nucleotide count are strongly
 correlated in series chains: check `report.correlation` and fix what you know
 (or fit `shift` only when the extension has an arbitrary zero).
 
+Many molecules:
+
+```python
+from unzipy.fitting import fit_batch, fit_global, load_curves
+
+curves = load_curves("my_curves/", sigma=0.5)
+batch = fit_batch(model, curves, start=start, fixed=fixed)
+batch.to_csv("fits.csv")
+print(batch.summary())  # mean, std, sem across molecules
+glob = fit_global(
+    model, curves, shared=["handles.L"], start=start, fixed=fixed
+)
+```
+
 Use `variable="f(x)"` for position-controlled data, `free=["trap.alpha"]` to
 fit a force-dependent trap stiffness, and `compare(wlc=fit_a, fjc=fit_b)` to
 rank models by AIC/BIC.

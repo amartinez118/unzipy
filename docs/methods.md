@@ -67,6 +67,14 @@ the Jacobian (rescaled by the reduced chi-square unless `absolute_sigma`).
 `FitReport.bootstrap` gives pair-bootstrap intervals and `compare` ranks fits by
 AIC/BIC with Akaike weights.
 
+`fit_batch` fits every curve independently (one molecule per curve) and
+returns a table, a between-molecule summary and a CSV export; failing curves
+are recorded, not fatal. `fit_global` fits all curves at once with the
+listed parameters shared (for example handle elasticity) and the rest fitted
+per curve (contour length, offset), using a sparse Jacobian so it scales to
+many curves. `compare` ranks a global fit against independent fits by
+AIC/BIC to test whether a parameter is really common to all molecules.
+
 ## Unzipping — `unzipy.unzipping`
 
 - **Alignment**: force levels discretised into letters and aligned globally with Needleman–Wunsch

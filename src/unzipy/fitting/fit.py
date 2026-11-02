@@ -59,6 +59,15 @@ class FitReport:
     _options: dict = field(repr=False, default_factory=dict)
 
     @property
+    def n_free(self):
+        """Return the number of fitted parameters.
+
+        Returns:
+            int: Length of ``free``.
+        """
+        return len(self.free)
+
+    @property
     def reduced_chi2(self):
         """Return ``chi2 / dof``.
 
@@ -157,6 +166,63 @@ class FitReport:
         return {"samples": samples, "names": self.free, "ci": ci}
 
 
+def _parameters(model, start, fixed, free, bounds):
+    """Resolve which parameters are free and their values and limits.
+
+    Args:
+        model (Model): Elastic model.
+        start (dict | None): Starting values by name.
+        fixed (dict | None): Parameters held fixed (value or None).
+        free (list[str] | None): Default-fixed parameters to fit.
+        bounds (dict | None): Bounds overriding the defaults.
+
+    Returns:
+        tuple: ``values`` (every parameter), ``held`` (set of fixed
+        names), ``free_names`` (tuple), and ``lower`` and ``upper`` bound
+        arrays of the free parameters.
+
+    Raises:
+        ValueError: If names are unknown, nothing is free, or a free
+            parameter has no starting value.
+    """
+    start, fixed, bounds = start or {}, fixed or {}, bounds or {}
+    free = list(free or [])
+    for group, label in (
+        (start, "start"),
+        (fixed, "fixed"),
+        (bounds, "bounds"),
+    ):
+        unknown = set(group) - set(model.names)
+        if unknown:
+            raise ValueError(
+                f"unknown parameters in {label}: {sorted(unknown)}"
+            )
+    unknown = set(free) - set(model.names)
+    if unknown:
+        raise ValueError(f"unknown parameters in free: {sorted(unknown)}")
+    values = {k: s.value for k, s in model.specs.items()}
+    values.update(start)
+    held = {
+        k for k, s in model.specs.items() if s.fixed and k not in free
+    } | set(fixed)
+    for k, v in fixed.items():
+        if v is not None:
+            values[k] = v
+    free_names = tuple(k for k in model.names if k not in held)
+    if not free_names:
+        raise ValueError("no free parameters to fit")
+    missing = [k for k, v in values.items() if v is None]
+    if missing:
+        raise ValueError(f"give starting values (start=...) for {missing}")
+    limits = [
+        bounds.get(k, (model.specs[k].lower, model.specs[k].upper))
+        for k in free_names
+    ]
+    lower = np.array([lim[0] for lim in limits], dtype=float)
+    upper = np.array([lim[1] for lim in limits], dtype=float)
+    return values, held, free_names, lower, upper
+
+
 def fit(
     model,
     f,
@@ -224,48 +290,14 @@ def fit(
     if np.any(sig <= 0):
         raise ValueError("sigma must be positive")
 
-    start, fixed, bounds = start or {}, fixed or {}, bounds or {}
-    free = list(free or [])
-    for group, label in (
-        (start, "start"),
-        (fixed, "fixed"),
-        (bounds, "bounds"),
-    ):
-        unknown = set(group) - set(model.names)
-        if unknown:
-            raise ValueError(
-                f"unknown parameters in {label}: {sorted(unknown)}"
-            )
-    unknown = set(free) - set(model.names)
-    if unknown:
-        raise ValueError(f"unknown parameters in free: {sorted(unknown)}")
-
-    values = {k: s.value for k, s in model.specs.items()}
-    values.update(start)
-    held = {
-        k for k, s in model.specs.items() if s.fixed and k not in free
-    } | set(fixed)
-    for k, v in fixed.items():
-        if v is not None:
-            values[k] = v
-    free_names = tuple(k for k in model.names if k not in held)
-    if not free_names:
-        raise ValueError("no free parameters to fit")
-    missing = [k for k, v in values.items() if v is None]
-    if missing:
-        raise ValueError(f"give starting values (start=...) for {missing}")
+    values, held, free_names, lower, upper = _parameters(
+        model, start, fixed, free, bounds
+    )
     if f.size <= len(free_names):
         raise ValueError(
             f"need more than {len(free_names)} points for "
             f"{len(free_names)} free parameters"
         )
-
-    limits = [
-        bounds.get(k, (model.specs[k].lower, model.specs[k].upper))
-        for k in free_names
-    ]
-    lower = np.array([lim[0] for lim in limits], dtype=float)
-    upper = np.array([lim[1] for lim in limits], dtype=float)
     theta0 = np.clip([values[k] for k in free_names], lower, upper)
     f_use = np.clip(f, 0.0, None)
 
@@ -357,7 +389,7 @@ def compare(**reports):
     rows = [
         {
             "label": k,
-            "k": len(r.free),
+            "k": r.n_free,
             "aic": r.aic,
             "delta_aic": r.aic - aic_min,
             "weight": raw[k] / total,
