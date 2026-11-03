@@ -25,11 +25,12 @@ may still change before 1.0.
 ## Install
 
 ```
-pip install git+https://github.com/amartinez118/unzipy      # or, from a clone:  pip install -e ".[dev]"
+pip install unzipy
 ```
 
 Requires Python ≥ 3.10, numpy ≥ 2.0 and scipy ≥ 1.13. Optional extras: `unzipy[fast]` (numba, faster
-curve alignment), `unzipy[plot]` (matplotlib).
+curve alignment), `unzipy[plot]` (matplotlib), for example
+`pip install "unzipy[fast,plot]"`.
 
 ## Quick start
 
