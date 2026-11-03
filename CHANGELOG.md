@@ -8,6 +8,7 @@
 - Development and CI use uv (`uv.lock`).
 - Dependabot, least-privilege workflow permissions, cancelled superseded CI runs, manual dry run of the release checks.
 - Type checking with pyright (`py.typed` shipped), CODE_OF_CONDUCT.md, CODEOWNERS, actions pinned to commit SHAs.
+- pre-commit hooks (file hygiene, ruff incl. Google docstring checks, pyright, lock check), also run in CI.
 - `SECURITY.md`; README "Citing" section.
 - `CITATION.cff`: citation metadata for the software.
 - `unzipy.fitting`: general fitters of elastic models (WLC, eWLC, FJC, eFJC,

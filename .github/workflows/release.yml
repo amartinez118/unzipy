@@ -25,8 +25,9 @@ jobs:
           v=$(python3 -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
           [ "v$v" = "${GITHUB_REF_NAME}" ] || { echo "tag ${GITHUB_REF_NAME} != version $v"; exit 1; }
       - run: uv sync --locked --extra dev --extra fast --python 3.12
-      - run: uv run ruff check . && uv run ruff format --check .
-      - run: uv run pyright
+      - run: uv run pre-commit run --all-files
+        env:
+          SKIP: no-commit-to-branch
       - run: uv run pytest -q
       - run: uv build && uvx twine check dist/*
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

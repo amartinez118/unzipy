@@ -194,6 +194,8 @@ def fit_batch(model, curves, on_error="skip", **kwargs):
     Raises:
         ValueError: If ``on_error`` is invalid, or a fit fails with
             ``on_error="raise"``.
+        numpy.linalg.LinAlgError: If a fit fails with ``on_error="raise"``
+            because of a singular problem.
     """
     if on_error not in ("skip", "raise"):
         raise ValueError("on_error must be 'skip' or 'raise'")
