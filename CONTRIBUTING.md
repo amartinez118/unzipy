@@ -8,8 +8,8 @@ Thanks for your interest! Bug reports, questions and pull requests are welcome.
 git clone https://github.com/amartinez118/unzipy && cd unzipy
 uv sync --extra dev --extra fast   # creates .venv from uv.lock
 uv run pytest                      # ~25 s
-uv run ruff check . && uv run ruff format --check .
-uv run pyright                     # type check
+uv run pre-commit install           # run the checks on every commit
+uv run pre-commit run --all-files  # ruff, pyright, docstrings, file hygiene
 ```
 
 ## Guidelines

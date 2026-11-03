@@ -19,7 +19,15 @@ try:  # optional acceleration
 except ImportError:  # pragma: no cover
 
     def njit(*args, **kwargs):
-        """Do nothing: fall back to plain Python without numba."""
+        """Do nothing: fall back to plain Python without numba.
+
+        Args:
+            *args: Decorated function, when used without arguments.
+            **kwargs: Ignored decorator options.
+
+        Returns:
+            Callable: The function itself, or an identity decorator.
+        """
         return args[0] if args and callable(args[0]) else (lambda f: f)
 
 

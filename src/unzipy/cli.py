@@ -107,6 +107,10 @@ def _neqwork_position(a):
 
     Returns:
         dict: Results to print as JSON.
+
+    Raises:
+        ValueError: If ``--k-eff`` is given without ``--f-min`` and
+            ``--f-max``, or the molecule parameters are incomplete.
     """
     from .fluctuation import estimate_free_energy
     from .fluctuation.position_ensemble import (
