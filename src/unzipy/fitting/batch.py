@@ -19,6 +19,7 @@ from scipy.sparse import issparse, lil_matrix
 
 from .curves import as_curves
 from .fit import VARIABLES, _parameters, fit
+from .models import Model
 
 
 @dataclass
@@ -244,7 +245,7 @@ class GlobalReport:
         message (str): Optimiser message.
     """
 
-    model: object
+    model: Model
     variable: str
     labels: list
     shared: dict

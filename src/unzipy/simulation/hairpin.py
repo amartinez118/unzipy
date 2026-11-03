@@ -265,7 +265,7 @@ class HairpinSim:
             numpy.ndarray: Barrier at each trap position.
         """
         inner = np.logaddexp.accumulate(-G, axis=0)  # ln sum_{k<=i} exp(-G_k)
-        return logsumexp(G + inner, axis=0)
+        return np.asarray(logsumexp(G + inner, axis=0))
 
     # --- simulation ------------------------------------------------------
     def simulate(
