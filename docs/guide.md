@@ -45,6 +45,50 @@ The construct has **two handles**; their energies are counted twice (`n_handles=
 `fluctuation.force_ensemble` (same function names as `position_ensemble`): work is `W = -int x df / kT` (Monge, Manosas, Ritort, PRE 98, 032146);
 extensions are referenced to the folded branch at `f_min` and the reference is restored with the model.
 
+## Fitting elastic models
+
+```python
+from unzipy.fitting import Model, fit, ss_wlc, ewlc, trap
+
+model = Model(ewlc(label="handles"), ss_wlc(), trap())
+report = fit(
+    model,
+    f,
+    x,  # force (pN), extension (nm)
+    start={"handles.L": 250.0, "ss.n": 40.0, "trap.k0": 0.07},
+    fixed={
+        "handles.p": 20.0,
+        "handles.Y": 200.0,
+        "ss.d0": 0.665,
+        "ss.p": 0.75,
+    },
+)
+print(report.summary())
+ci = report.bootstrap(n_boot=500, rng=0)["ci"]
+```
+
+Contour lengths, the offset `shift` and the nucleotide count are strongly
+correlated in series chains: check `report.correlation` and fix what you know
+(or fit `shift` only when the extension has an arbitrary zero).
+
+Many molecules:
+
+```python
+from unzipy.fitting import fit_batch, fit_global, load_curves
+
+curves = load_curves("my_curves/", sigma=0.5)
+batch = fit_batch(model, curves, start=start, fixed=fixed)
+batch.to_csv("fits.csv")
+print(batch.summary())  # mean, std, sem across molecules
+glob = fit_global(
+    model, curves, shared=["handles.L"], start=start, fixed=fixed
+)
+```
+
+Use `variable="f(x)"` for position-controlled data, `free=["trap.alpha"]` to
+fit a force-dependent trap stiffness, and `compare(wlc=fit_a, fjc=fit_b)` to
+rank models by AIC/BIC.
+
 ## Unzipping
 
 `unzipping`: `split_cycles` (raw trace -> trajectories), `align_curves`, `equilibrium_fdc`
