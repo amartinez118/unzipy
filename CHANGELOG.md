@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- `unzipy.fitting`: general fitters of elastic models (WLC, eWLC, FJC, eFJC,
+  dipole, trap, series chains) in `x(f)` and `f(x)`, with uncertainties,
+  bootstrap intervals and model comparison.
+- `fit_batch`, `fit_global` and `load_curves`: fits over many curves, with
+  tables, summaries and parameters shared across molecules.
 - Property-based tests (hypothesis) of the WLC/FJC, Jarzynski/Bennett and
   bias invariants.
 
