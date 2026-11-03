@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- `split_cycles_adaptive`: splits traces without force limits.
+- `read_trace`: reads raw files by column name (any layout, continuation files, truncated rows).
+- `stiffness_before_rip`: effective stiffness of the folded branch just before the rip.
+- Fixed the Jarzynski bias for small dissipation: the power law of eq. 7 grew with the number of
+  work values for `<D> <= ln 2` (values up to 1e6 kT); `bias` now falls back to eq. 4 and is bounded.
+
 ## 0.1.0 (unreleased)
 
 First public version: polymer elasticity; Jarzynski (with bias correction), Bennett and Crooks

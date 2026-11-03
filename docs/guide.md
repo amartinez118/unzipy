@@ -45,6 +45,36 @@ The construct has **two handles**; their energies are counted twice (`n_handles=
 `fluctuation.force_ensemble` (same function names as `position_ensemble`): work is `W = -int x df / kT` (Monge, Manosas, Ritort, PRE 98, 032146);
 extensions are referenced to the folded branch at `f_min` and the reference is restored with the model.
 
+## From raw files to works
+
+```python
+from unzipy.io import read_trace
+from unzipy.unzipping import (
+    find_event,
+    split_cycles_adaptive,
+    stiffness_before_rip,
+)
+from unzipy.fluctuation.position_ensemble import (
+    contributions,
+    estimate_free_energy,
+)
+
+tr = read_trace(["run1A.txt", "run1B.txt"])  # columns found by name
+segs = split_cycles_adaptive(tr.t, tr.f, x=tr.x)  # no force limits needed
+unfolding = [s for s in segs if s.kind == "u"]
+trajs = [(tr.x[s.slice], tr.f[s.slice]) for s in unfolding]
+rips = [find_event(x, f, "u") for x, f in trajs]
+k = stiffness_before_rip(trajs, rips, window=10.0)  # k.k, k.err, k.n
+```
+
+`read_trace` handles files with different column sets, with or without a sample counter
+or status column, truncated rows and continuation files. `split_cycles_adaptive` finds the
+turning points from the data, so cycles are kept when the protocol limits change during a run.
+`k_eff` for `contributions(..., handles="spring")` is the slope of the folded branch just
+before the rip, not the low-force slope. Align the trajectories first (a translation plus a
+small stretch fitted to the two ends is enough for two-state curves) and exclude curves whose
+work is non-physical before using exponential averages.
+
 ## Unzipping
 
 `unzipping`: `split_cycles` (raw trace -> trajectories), `align_curves`, `equilibrium_fdc`
