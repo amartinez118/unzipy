@@ -10,6 +10,7 @@ from .split import (
     read_tweezers_trace,
     split_by_status,
     split_cycles,
+    split_cycles_adaptive,
     write_segments,
 )
 from .stretching import StretchFit, StretchModel, fit_stretching_model
@@ -39,5 +40,6 @@ __all__ = [
     "rupture_statistics",
     "split_by_status",
     "split_cycles",
+    "split_cycles_adaptive",
     "write_segments",
 ]
