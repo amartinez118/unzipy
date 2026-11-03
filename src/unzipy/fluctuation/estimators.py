@@ -8,6 +8,8 @@ in units of kT. The free-energy difference is ``dG = G(1) - G(0)``, so ``<w_f>
 
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
 from scipy.optimize import brentq
 from scipy.special import expit, logsumexp
@@ -50,7 +52,7 @@ def jarzynski(w, axis=-1):
         ValueError: If ``w`` is empty or not finite.
     """
     w = _check_work(w)
-    return -(logsumexp(-w, axis=axis) - np.log(w.shape[axis]))
+    return -(np.asarray(logsumexp(-w, axis=axis)) - np.log(w.shape[axis]))
 
 
 def jarzynski_reverse(w_r, axis=-1):
@@ -117,7 +119,7 @@ def bennett(w_f, w_r):
         lo -= pad
     while g(hi) < 0:
         hi += pad
-    return brentq(g, lo, hi, xtol=1e-12)
+    return cast(float, brentq(g, lo, hi, xtol=1e-12))
 
 
 def bennett_error(w_f, w_r, dg=None):

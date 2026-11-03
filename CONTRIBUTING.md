@@ -9,6 +9,7 @@ git clone https://github.com/amartinez118/unzipy && cd unzipy
 uv sync --extra dev --extra fast   # creates .venv from uv.lock
 uv run pytest                      # ~25 s
 uv run ruff check . && uv run ruff format --check .
+uv run pyright                     # type check
 ```
 
 ## Guidelines

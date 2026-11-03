@@ -107,7 +107,7 @@ def ewlc(label="ewlc", form="scaled"):
     """
     if form == "scaled":
 
-        def func(f, kT, L, p, Y):
+        def func(f, kT, L, p, Y):  # pyright: ignore[reportRedeclaration]
             return L * ewlc_scaled_extension(f, p, Y, kT)
 
         modulus = "Y"

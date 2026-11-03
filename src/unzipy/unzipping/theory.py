@@ -176,7 +176,7 @@ def equilibrium_fdc(setup: UnzippingSetup, lam) -> FDC:
     lam = np.asarray(lam, dtype=float)
     f = setup.forces(lam)
     E = setup.energies(f)
-    logz = logsumexp(-E, axis=0)
+    logz = np.asarray(logsumexp(-E, axis=0))
     p = np.exp(-E - logz)
     n = np.arange(E.shape[0])[:, None]
     return FDC(

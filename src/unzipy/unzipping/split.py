@@ -368,7 +368,7 @@ def split_by_status(status, fold_code=130, unfold_code=131):
     stops = np.concatenate([edges, [status.size]])
     kinds = {fold_code: "f", unfold_code: "u"}
     return [
-        Segment(kinds[status[a]], slice(a, b))
+        Segment(kinds[int(status[a])], slice(a, b))
         for a, b in zip(starts, stops, strict=True)
         if status[a] in kinds
     ]

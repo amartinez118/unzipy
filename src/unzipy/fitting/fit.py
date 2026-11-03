@@ -13,6 +13,8 @@ from dataclasses import dataclass, field
 import numpy as np
 from scipy.optimize import least_squares
 
+from .models import Model
+
 VARIABLES = ("x(f)", "f(x)")
 
 
@@ -40,7 +42,7 @@ class FitReport:
         message (str): Optimiser message.
     """
 
-    model: object
+    model: Model
     variable: str
     values: dict
     errors: dict

@@ -166,7 +166,8 @@ def _neqwork_force(a):
         n_handles=a.n_handles,
     )
     w_f, w_r = fe_mod.works_from_directory(a.directory, a.f_range)
-    dg0, err = fe_mod.zero_force_free_energy(w_f, w_r, *a.f_range, model)
+    f_min, f_max = a.f_range
+    dg0, err = fe_mod.zero_force_free_energy(w_f, w_r, f_min, f_max, model)
     return {
         "n_forward": len(w_f),
         "n_reverse": len(w_r),
