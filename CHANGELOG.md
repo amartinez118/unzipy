@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Release workflow: pushing a `v*` tag publishes to PyPI and creates a GitHub release.
 - `SECURITY.md`; README "Citing" section.
 - `CITATION.cff`: citation metadata for the software.
 - `unzipy.fitting`: general fitters of elastic models (WLC, eWLC, FJC, eFJC,
