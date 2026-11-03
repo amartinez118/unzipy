@@ -56,7 +56,7 @@ class GaussianMixture:
         Returns:
             numpy.ndarray: Density at ``x``.
         """
-        return np.exp(logsumexp(self.log_components(x), axis=1))
+        return np.exp(np.asarray(logsumexp(self.log_components(x), axis=1)))
 
     def responsibilities(self, x):
         """Return the posterior component probabilities.
@@ -69,7 +69,7 @@ class GaussianMixture:
             belongs to component ``k``.
         """
         lc = self.log_components(x)
-        return np.exp(lc - logsumexp(lc, axis=1, keepdims=True))
+        return np.exp(lc - np.asarray(logsumexp(lc, axis=1, keepdims=True)))
 
     def classify(self, x, rng=None):
         """Draw a component for each sample from its posterior.
@@ -144,7 +144,7 @@ def fit_gmm(
         prev = -np.inf
         for _ in range(max_iter):
             lc = m.log_components(x)
-            ll = logsumexp(lc, axis=1)
+            ll = np.asarray(logsumexp(lc, axis=1))
             r = np.exp(lc - ll[:, None]) * wgt[:, None]
             nk = r.sum(axis=0) + 1e-12
             means = (r * x[:, None]).sum(axis=0) / nk
@@ -159,10 +159,11 @@ def fit_gmm(
                 break
             prev = total
         m.log_likelihood = float(
-            (wgt * logsumexp(m.log_components(x), axis=1)).sum()
+            (wgt * np.asarray(logsumexp(m.log_components(x), axis=1))).sum()
         )
         if best is None or m.log_likelihood > best.log_likelihood:
             best = m
+    assert best is not None
     sigmas = np.sqrt(np.maximum(best.sigmas**2 - width**2 / 12.0, 1e-12))
     order = np.argsort(best.means)
     return GaussianMixture(
