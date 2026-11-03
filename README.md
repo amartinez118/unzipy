@@ -56,6 +56,7 @@ stem length and loop length (or their sequence): nothing assumes a particular ha
 | `unzipy.polymer` | WLC, eWLC, FJC: force↔extension, energies, compliances |
 | `unzipy.fluctuation` | Jarzynski (+ bias model and corrected estimator), Bennett (+ error), Crooks, matching, dissipated work; `position_ensemble` and `force_ensemble` pipelines |
 | `unzipy.stats` | bootstrap, KDE with optimal bandwidth, outlier tests, Gaussian mixtures |
+| `unzipy.fitting` | fits of force-extension data to elastic models (WLC, eWLC, FJC, eFJC, dipole, trap, series chains) in `x(f)` or `f(x)`, with uncertainties, bootstrap intervals and AIC/BIC model comparison |
 | `unzipy.unzipping` | curve alignment, rupture rates, event detection, elastic fits and stretching model, equilibrium FDC, trace splitting |
 | `unzipy.landscape` | nearest-neighbour stacks (SantaLucia 1998, Huguet 2010), sequential-opening landscape, mutant libraries |
 | `unzipy.simulation` | two-state hairpin pulling simulation |
