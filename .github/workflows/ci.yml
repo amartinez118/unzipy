@@ -3,6 +3,14 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:  # manual dry run from the Actions tab
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   check:
     name: Lint, test and build
