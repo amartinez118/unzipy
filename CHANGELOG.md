@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- `unzipy.fitting`: general fitters of elastic models (WLC, eWLC, FJC, eFJC,
+  dipole, trap, series chains) in `x(f)` and `f(x)`, with uncertainties,
+  bootstrap intervals and model comparison.
+- `fit_batch`, `fit_global` and `load_curves`: fits over many curves, with
+  tables, summaries and parameters shared across molecules.
+- Property-based tests (hypothesis) of the WLC/FJC, Jarzynski/Bennett and
+  bias invariants.
 - `split_cycles_adaptive`: splits traces without force limits.
 - `read_trace`: reads raw files by column name (any layout, continuation files, truncated rows).
 - `stiffness_before_rip`: effective stiffness of the folded branch just before the rip.
