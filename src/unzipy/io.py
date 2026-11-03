@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import re
+import warnings
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
@@ -127,3 +129,147 @@ def parse_mc_log(path, n_params, skip_lines=0, drop=("T 0",)):
         values.extend(float(t) for t in _NUMBER.findall(ln))
     n_steps = len(values) // n_params
     return np.array(values[: n_steps * n_params]).reshape(n_steps, n_params)
+
+
+@dataclass
+class Trace:
+    """A raw pulling trace read by column name.
+
+    Attributes:
+        t (numpy.ndarray): Time (s).
+        f (numpy.ndarray): Force (pN), absolute value of the chosen column.
+        x (numpy.ndarray): Trap position (nm), the mean of the position
+            columns.
+        force (numpy.ndarray): Force with its original sign (pN).
+        count (numpy.ndarray): Sample counter; NaN where the files have none.
+        status (numpy.ndarray): Status code; NaN where the files have none.
+        files (list[str]): Files read, in order.
+    """
+
+    t: np.ndarray
+    f: np.ndarray
+    x: np.ndarray
+    force: np.ndarray
+    count: np.ndarray
+    status: np.ndarray
+    files: list
+
+
+def _read_named_columns(path, names, header_lines):
+    """Read the named columns of one file.
+
+    Args:
+        path (str | os.PathLike): File to read.
+        names (list[str]): Wanted column names; those absent from the file
+            are returned as None.
+        header_lines (int): Number of leading lines searched for the header.
+
+    Returns:
+        dict[str, numpy.ndarray | None]: Column by name.
+
+    Raises:
+        ValueError: If no leading line contains the force column or the
+            file has no complete data row.
+    """
+    header = None
+    with open(path, errors="replace") as fh:
+        for _ in range(header_lines):
+            cols = fh.readline().lstrip("#").split()
+            if names[0] in cols:
+                header = cols
+                break
+    if header is None:
+        raise ValueError(f"no header with the force column in {path}")
+    use = [header.index(n) for n in names if n in header]
+    present = [n for n in names if n in header]
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)  # empty file
+            data = np.loadtxt(path, comments="#", usecols=use, ndmin=2)
+    except ValueError:  # ragged rows: keep only the complete ones
+        rows = []
+        with open(path, errors="replace") as fh:
+            for line in fh:
+                parts = line.split()
+                if line.startswith("#") or len(parts) != len(header):
+                    continue
+                try:
+                    rows.append([float(parts[c]) for c in use])
+                except ValueError:
+                    continue
+        data = np.array(rows, dtype=float).reshape(-1, len(use))
+    if data.shape[0] == 0:
+        raise ValueError(f"no complete data rows in {path}")
+    out = dict.fromkeys(names)
+    for k, n in enumerate(present):
+        out[n] = data[:, k]
+    return out
+
+
+def read_trace(
+    paths,
+    force="Y_force",
+    positions=("A_dist-Y", "B_dist-Y"),
+    time="time(sec)",
+    count="CycleCount/n",
+    status="Status",
+    header_lines=6,
+):
+    """Read raw trace files by column name.
+
+    The layout of instrument files varies between sessions (which columns are
+    recorded, their order, whether a sample counter or a status column exists,
+    where the header line sits), so columns are found from the header. Several
+    files, for example the continuation files of one long run, are
+    concatenated. Rows with a different number of fields than the header
+    (truncated writes) are dropped, and ``#`` lines are comments.
+
+    Args:
+        paths (str | os.PathLike | list): File or files, in time order.
+        force (str): Name of the force column.
+        positions (tuple[str, ...]): Names of the trap position columns; the
+            position is their mean.
+        time (str): Name of the time column.
+        count (str): Name of the sample counter column (optional).
+        status (str): Name of the status column (optional).
+        header_lines (int): Number of leading lines searched for the header.
+
+    Returns:
+        Trace: Time, force, position and the optional columns.
+
+    Raises:
+        ValueError: If a file has no header with the required columns or no
+            complete data row.
+    """
+    if isinstance(paths, (str, Path)):
+        paths = [paths]
+    names = [force, time, *positions, count, status]
+    parts = []
+    for path in paths:
+        cols = _read_named_columns(path, names, header_lines)
+        missing = [n for n in (force, time, *positions) if cols[n] is None]
+        if missing:
+            raise ValueError(f"{path}: columns not found: {missing}")
+        parts.append(cols)
+
+    def cat(name):
+        return np.concatenate(
+            [
+                p[name]
+                if p[name] is not None
+                else np.full(len(p[force]), np.nan)
+                for p in parts
+            ]
+        )
+
+    signed = cat(force)
+    pos = np.mean([cat(n) for n in positions], axis=0)
+    return Trace(
+        t=cat(time),
+        f=np.abs(signed),
+        x=pos,
+        force=signed,
+        count=cat(count),
+        status=cat(status),
+        files=[str(p) for p in paths],
+    )
