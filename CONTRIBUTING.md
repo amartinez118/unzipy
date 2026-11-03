@@ -32,3 +32,17 @@ uv run pre-commit run --all-files  # ruff, pyright, docstrings, file hygiene
 
 Please include the versions (`pip list | grep -E "numpy|scipy|unzipy"`), a minimal script that
 reproduces it (synthetic data is fine), the expected and the observed result.
+
+## Releasing
+
+1. On a branch, run `uv run python scripts/release.py patch` (or `minor`,
+   `major`, or an explicit version such as `0.3.0`). It updates
+   `pyproject.toml`, `uv.lock`, `CITATION.cff` and `CHANGELOG.md`; the package
+   reads its version from the installed metadata.
+2. Open a PR to `main` and merge it once CI is green.
+3. On GitHub, draft a release: new tag `v<version>`, target `main`, publish.
+   The release workflow checks the tag against the version, runs all checks
+   and publishes to PyPI.
+
+A published version can never be replaced on PyPI; to fix a bad release, bump
+the version and publish again.
