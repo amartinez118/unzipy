@@ -1,6 +1,8 @@
 # unzipy
 
-[![CI](https://github.com/amartinez118/unzipy/actions/workflows/ci.yml/badge.svg)](https://github.com/amartinez118/unzipy/actions/workflows/ci.yml)
+[![Lint, test and build](https://github.com/amartinez118/unzipy/actions/workflows/ci.yml/badge.svg)](https://github.com/amartinez118/unzipy/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/unzipy.svg)](https://pypi.org/project/unzipy/)
+[![Python](https://img.shields.io/pypi/pyversions/unzipy.svg)](https://pypi.org/project/unzipy/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **Single-molecule force spectroscopy and nonequilibrium statistical physics in Python.**

@@ -6,10 +6,9 @@ Thanks for your interest! Bug reports, questions and pull requests are welcome.
 
 ```
 git clone https://github.com/amartinez118/unzipy && cd unzipy
-python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev,fast]"
-pytest                    # ~25 s
-ruff check . && ruff format --check .
+uv sync --extra dev --extra fast   # creates .venv from uv.lock
+uv run pytest                      # ~25 s
+uv run ruff check . && uv run ruff format --check .
 ```
 
 ## Guidelines

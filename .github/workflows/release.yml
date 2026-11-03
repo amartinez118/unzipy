@@ -1,4 +1,4 @@
-name: Release
+name: Release to PyPI
 
 # Publishing a GitHub release (tag v<version>) publishes to PyPI.
 # Nothing is published unless lint, tests and the build all pass and the tag
@@ -6,31 +6,37 @@ name: Release
 on:
   release:
     types: [published]
+  workflow_dispatch:  # dry run: runs the checks, never publishes
+
+permissions:
+  contents: read
 
 jobs:
-  ci:
+  check:
+    name: Lint, test and build
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v5
       - name: Check tag matches package version
         run: |
-          v=$(python -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          [ "${GITHUB_EVENT_NAME}" = "release" ] || exit 0
+          v=$(python3 -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
           [ "v$v" = "${GITHUB_REF_NAME}" ] || { echo "tag ${GITHUB_REF_NAME} != version $v"; exit 1; }
-      - run: pip install -e ".[dev]" build twine
-      - run: ruff check . && ruff format --check .
-      - run: pytest -q
-      - run: python -m build && twine check dist/*
+      - run: uv sync --locked --extra dev --python 3.12
+      - run: uv run ruff check . && uv run ruff format --check .
+      - run: uv run pytest -q
+      - run: uv build && uvx twine check dist/*
       - uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/
 
   pypi:
-    needs: ci
+    name: Publish to PyPI
+    needs: check
+    if: github.event_name == 'release'
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
