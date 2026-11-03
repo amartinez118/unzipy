@@ -9,6 +9,7 @@
 - Dependabot, least-privilege workflow permissions, cancelled superseded CI runs, manual dry run of the release checks.
 - Type checking with pyright (`py.typed` shipped), CODE_OF_CONDUCT.md, CODEOWNERS, actions pinned to commit SHAs.
 - pre-commit hooks (file hygiene, ruff incl. Google docstring checks, pyright, lock check), also run in CI.
+- Secret scanning: gitleaks (pre-commit and CI, full history), private-key and large-file checks, credential patterns in .gitignore.
 - `SECURITY.md`; README "Citing" section.
 - `CITATION.cff`: citation metadata for the software.
 - `unzipy.fitting`: general fitters of elastic models (WLC, eWLC, FJC, eFJC,
