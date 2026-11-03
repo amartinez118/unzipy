@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 0.1.1 - 2026-11-03
+## 0.2.0 - 2026-11-03
 
 - Development and CI use uv (`uv.lock`).
 - Dependabot, least-privilege workflow permissions, cancelled superseded CI runs, manual dry run of the release checks.
