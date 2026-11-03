@@ -9,6 +9,8 @@ length (nm), ``f`` the force (pN); energies are in kT.
 
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
 
 from ..constants import KT25
@@ -43,7 +45,10 @@ def _bouchiat(l: np.ndarray) -> np.ndarray:
     Returns:
         numpy.ndarray: Correction to ``f p / kT``.
     """
-    return sum(a * l**k for a, k in zip(_BOUCHIAT, _POWERS, strict=True))
+    return cast(
+        np.ndarray,
+        sum(a * l**k for a, k in zip(_BOUCHIAT, _POWERS, strict=True)),
+    )
 
 
 def wlc_force(l, p, kT=KT25, bouchiat=False):

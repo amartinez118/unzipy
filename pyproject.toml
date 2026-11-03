@@ -37,7 +37,7 @@ unzipy = "unzipy.cli:main"
 [project.optional-dependencies]
 plot = ["matplotlib>=3.7"]
 fast = ["numba>=0.58"]
-dev = ["pytest>=8", "hypothesis>=6", "ruff>=0.5"]
+dev = ["pytest>=8", "hypothesis>=6", "ruff>=0.5", "pyright>=1.1.400"]
 
 [tool.hatch.build.targets.sdist]
 include = ["src", "tests", "docs", "examples", "README.md", "LICENSE", "CHANGELOG.md", "CONTRIBUTING.md", "pyproject.toml"]
@@ -65,3 +65,8 @@ convention = "google"
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["D"]
 "examples/*" = ["D"]
+
+[tool.pyright]
+include = ["src"]
+pythonVersion = "3.10"
+typeCheckingMode = "basic"
