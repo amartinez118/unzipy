@@ -37,7 +37,7 @@ unzipy = "unzipy.cli:main"
 [project.optional-dependencies]
 plot = ["matplotlib>=3.7"]
 fast = ["numba>=0.58"]
-dev = ["pytest>=8", "hypothesis>=6", "ruff>=0.5", "pyright>=1.1.400"]
+dev = ["pytest>=8", "hypothesis>=6", "ruff>=0.5", "pyright>=1.1.400", "pre-commit>=4"]
 
 [tool.hatch.build.targets.sdist]
 include = ["src", "tests", "docs", "examples", "README.md", "LICENSE", "CHANGELOG.md", "CONTRIBUTING.md", "pyproject.toml"]
@@ -53,7 +53,10 @@ line-length = 79
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "W", "F", "I", "UP", "B", "D"]
+# DOC201/DOC501 (preview) check the Returns and Raises sections of docstrings.
+preview = true
+explicit-preview-rules = true
+select = ["E", "W", "F", "I", "UP", "B", "D", "DOC201", "DOC501"]
 ignore = ["E741"]  # `l` is the physics symbol for relative extension
 
 [tool.ruff.lint.pycodestyle]
@@ -63,8 +66,8 @@ max-doc-length = 79
 convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["D"]
-"examples/*" = ["D"]
+"tests/*" = ["D", "DOC"]
+"examples/*" = ["D", "DOC"]
 
 [tool.pyright]
 include = ["src"]

@@ -79,7 +79,7 @@ Phys. Rev. E 98, 032146). See [docs/methods.md](docs/methods.md#validation) for 
 ## Contributing, license, citation
 
 Issues and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). Released under the
-[MIT license](LICENSE). 
+[MIT license](LICENSE).
 
 ## Citing
 
