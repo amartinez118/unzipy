@@ -6,14 +6,17 @@ on:
 jobs:
   test:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        python: ["3.10", "3.12", "3.13"]
-        extras: ["dev"]
+        # Linux covers the supported Python range; macOS (scarce runners) one version
         include:
+          - { os: ubuntu-latest, python: "3.10", extras: "dev" }
+          - { os: ubuntu-latest, python: "3.12", extras: "dev" }
+          - { os: ubuntu-latest, python: "3.13", extras: "dev" }
           - { os: ubuntu-latest, python: "3.12", extras: "dev,fast" }  # numba code path
+          - { os: macos-latest, python: "3.12", extras: "dev" }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -23,6 +26,7 @@ jobs:
       - run: pytest -q
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
