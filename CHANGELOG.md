@@ -5,6 +5,7 @@
 ## 0.1.0 - 2026-11-03
 
 - Release workflow: publishing a GitHub release runs lint and tests, then publishes to PyPI.
+- Development and CI use uv (`uv.lock`).
 - `SECURITY.md`; README "Citing" section.
 - `CITATION.cff`: citation metadata for the software.
 - `unzipy.fitting`: general fitters of elastic models (WLC, eWLC, FJC, eFJC,
