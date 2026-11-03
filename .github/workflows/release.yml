@@ -1,4 +1,4 @@
-name: Release
+name: Release to PyPI
 
 # Publishing a GitHub release (tag v<version>) publishes to PyPI.
 # Nothing is published unless lint, tests and the build all pass and the tag
@@ -8,7 +8,8 @@ on:
     types: [published]
 
 jobs:
-  ci:
+  check:
+    name: Lint, test and build
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -28,7 +29,8 @@ jobs:
           path: dist/
 
   pypi:
-    needs: ci
+    name: Publish to PyPI
+    needs: check
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
