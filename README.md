@@ -70,12 +70,7 @@ references and how each is validated; `examples/quickstart.py` is a runnable tou
 
 ## Validation
 
-Each module is tested against an independent reference wherever one exists: analytic limits and
-numerical integrals (elasticity), exact Gaussian-work results (Jarzynski, Bennett), brute-force
-simulation of the Jarzynski bias, Bell–Evans kinetics (rupture rates), equilibrium free energies from
-a model landscape (simulation through Crooks/Bennett), MFOLD stacking energies, a quasi-static
-force-ensemble protocol, and published numbers (Table 1 of J. Stat. Mech. (2019) 124001; the ensemble rate ratio of
-Phys. Rev. E 98, 032146). See [docs/methods.md](docs/methods.md#validation) for the list and its limits.
+See [docs/methods.md](docs/methods.md#validation).
 
 ## Contributing, license, citation
 
