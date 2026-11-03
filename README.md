@@ -77,4 +77,9 @@ Phys. Rev. E 98, 032146). See [docs/methods.md](docs/methods.md#validation) for 
 ## Contributing, license, citation
 
 Issues and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). Released under the
-[MIT license](LICENSE). A citation file will be added with the first release.
+[MIT license](LICENSE). 
+
+## Citing
+
+If you use `unzipy` in your work, please cite it using [CITATION.cff](CITATION.cff)
+(GitHub's "Cite this repository" button gives BibTeX and APA).
