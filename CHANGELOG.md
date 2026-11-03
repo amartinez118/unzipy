@@ -2,14 +2,19 @@
 
 ## Unreleased
 
-## 0.1.0 - 2026-11-03
+## 0.1.1 - 2026-11-03
 
-- Release workflow: publishing a GitHub release runs lint and tests, then publishes to PyPI.
 - Development and CI use uv (`uv.lock`).
 - Dependabot, least-privilege workflow permissions, cancelled superseded CI runs, manual dry run of the release checks.
 - Type checking with pyright (`py.typed` shipped), CODE_OF_CONDUCT.md, CODEOWNERS, actions pinned to commit SHAs.
 - pre-commit hooks (file hygiene, ruff incl. Google docstring checks, pyright, lock check), also run in CI.
 - Secret scanning: gitleaks (pre-commit and CI, full history), private-key and large-file checks, credential patterns in .gitignore.
+- README: install with `pip install unzipy`.
+- Release checks scan the full history with a pre-commit hook (the gitleaks action does not support the release event).
+
+## 0.1.0 - 2026-11-03
+
+- Release workflow: publishing a GitHub release runs lint and tests, then publishes to PyPI.
 - `SECURITY.md`; README "Citing" section.
 - `CITATION.cff`: citation metadata for the software.
 - `unzipy.fitting`: general fitters of elastic models (WLC, eWLC, FJC, eFJC,
