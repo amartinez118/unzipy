@@ -10,3 +10,13 @@ dist/
 build/
 .venv.nosync/
 .hypothesis/
+
+# secrets and credentials
+.env
+.env.*
+*.pem
+*.key
+*.p12
+id_rsa*
+secrets.*
+credentials*
