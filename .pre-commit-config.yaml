@@ -48,3 +48,10 @@ repos:
     hooks:
       # Scans staged changes for API keys, tokens, passwords and the like.
       - id: gitleaks
+      # Whole-history scan, used by the release workflow (the gitleaks
+      # action does not support the release event).
+      - id: gitleaks
+        alias: gitleaks-history
+        name: Detect hardcoded secrets (full history)
+        entry: gitleaks git --redact --verbose
+        stages: [manual]
