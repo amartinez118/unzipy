@@ -89,6 +89,36 @@ Use `variable="f(x)"` for position-controlled data, `free=["trap.alpha"]` to
 fit a force-dependent trap stiffness, and `compare(wlc=fit_a, fjc=fit_b)` to
 rank models by AIC/BIC.
 
+## From raw files to works
+
+```python
+from unzipy.io import read_trace
+from unzipy.unzipping import (
+    find_event,
+    split_cycles_adaptive,
+    stiffness_before_rip,
+)
+from unzipy.fluctuation.position_ensemble import (
+    contributions,
+    estimate_free_energy,
+)
+
+tr = read_trace(["run1A.txt", "run1B.txt"])  # columns found by name
+segs = split_cycles_adaptive(tr.t, tr.f, x=tr.x)  # no force limits needed
+unfolding = [s for s in segs if s.kind == "u"]
+trajs = [(tr.x[s.slice], tr.f[s.slice]) for s in unfolding]
+rips = [find_event(x, f, "u") for x, f in trajs]
+k = stiffness_before_rip(trajs, rips, window=10.0)  # k.k, k.err, k.n
+```
+
+`read_trace` handles files with different column sets, with or without a sample counter
+or status column, truncated rows and continuation files. `split_cycles_adaptive` finds the
+turning points from the data, so cycles are kept when the protocol limits change during a run.
+`k_eff` for `contributions(..., handles="spring")` is the slope of the folded branch just
+before the rip, not the low-force slope. Align the trajectories first (a translation plus a
+small stretch fitted to the two ends is enough for two-state curves) and exclude curves whose
+work is non-physical before using exponential averages.
+
 ## Unzipping
 
 `unzipping`: `split_cycles` (raw trace -> trajectories), `align_curves`, `equilibrium_fdc`

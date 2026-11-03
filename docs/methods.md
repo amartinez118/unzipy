@@ -45,6 +45,13 @@ Work is `W = -∫ x df / kT` (Monge, Manosas, Ritort, PRE 98, 032146). Extension
 relative to the folded branch at `f_min`; the model restores the reference before subtracting the
 Gibbs energies of strand, handles and dipole.
 
+### Bias of the Jarzynski estimator
+
+The empirical power law for the bias of Gaussian work (eq. 7) has the exponent `z = -ln(ln 2 /
+<D>) / <D>`, which is negative for `<D>` below `ln 2`; there `bias` uses the scaling-limit bias
+of eq. 4 instead and bounds the result by the characteristic dissipation. The tail fit behind
+`jarzynski_corrected` is not robust to a single non-physical work, which inflates `mu`.
+
 ## Statistics — `unzipy.stats`
 
 Uniform bootstrap with chunked resampling; bootstrap densities on fixed bin edges; Gaussian KDE with
@@ -85,6 +92,14 @@ AIC/BIC to test whether a parameter is really common to all molecules.
 - **Equilibrium FDC** from pair energies: states `n = 0..N` open pairs, trap in series with two
   released strands; the mean force `<f> = Σ p_n f_n` equals `dF/dλ` exactly.
 - Event detection, effective stiffness, ssDNA elastic fits, trace splitting.
+
+### Splitting and effective stiffness
+
+`split_cycles_adaptive` takes the alternating extrema of the smoothed force whose prominence
+exceeds 60% of the lower end of the group of prominences that carries most of the total (cycles,
+as against rip-sized bumps and rare huge excursions). `stiffness_before_rip` fits the folded
+branch linearly over a window that ends just before each rip and returns the median slope with
+a bootstrap error. With a handle energy of hundreds of kT, 1% in the stiffness is several kT.
 
 ## Landscape and simulation — `unzipy.landscape`, `unzipy.simulation`
 

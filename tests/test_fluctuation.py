@@ -6,7 +6,10 @@ import pytest
 from unzipy.fluctuation import (
     bennett,
     bennett_error,
+    bias,
+    bias_power_law,
     jarzynski,
+    jarzynski_corrected,
     jarzynski_reverse,
 )
 from unzipy.stats import bootstrap, bootstrap_pdf
@@ -243,3 +246,32 @@ def test_auto_bias_is_nonnegative_and_accurate_for_lambda_above_one(mu, n):
     est = bias(n, mu, 2.0, 0.0, np.pi**-0.5)
     assert est >= 0 and est == gaussian_bias(n, 2 * mu)
     assert abs(est - numeric) < 0.1, (mu, n, est, numeric)
+
+
+def test_bias_is_bounded_and_vanishes_for_converged_small_dissipation():
+    # small mu with many samples: lambda far above 1 and mu < ln 2, where
+    # the empirical power law would grow with N
+    for mu in (0.05, 0.3, 0.5, 0.69):
+        for n in (10, 100, 1000, 10**5):
+            b = bias(n, mu)
+            assert 0.0 <= b <= mu + 1e-12
+    assert bias(10**5, 0.3) < 1e-6
+    # more samples never increase the bias at fixed mu
+    ns = np.array([10, 30, 100, 300, 1000, 10**4, 10**5])
+    for mu in (0.3, 1.0, 3.0):
+        b = np.array([bias(int(n), mu) for n in ns])
+        assert np.all(np.diff(b) <= 1e-9)
+
+
+def test_power_law_rejects_dissipation_below_ln2():
+    with pytest.raises(ValueError):
+        bias_power_law(100, 0.5)
+    assert 0.0 < bias_power_law(100, 2.0) < 2.0
+
+
+def test_corrected_jarzynski_stays_close_to_plain_for_benign_work():
+    for seed in range(20):
+        w = np.random.default_rng(seed).normal(100.0, 0.8, 150)  # D = 0.32
+        ce = jarzynski_corrected(w)
+        assert 0.0 <= ce.bias < 0.3
+        assert abs(ce.dF_star - ce.dF_N) < 0.3

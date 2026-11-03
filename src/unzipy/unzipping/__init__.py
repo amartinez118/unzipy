@@ -1,7 +1,14 @@
 """Unzipping analysis: alignment, rupture rates, events and theory."""
 
 from .align import Alignment, align_curves, last_rip_shift, needleman_wunsch
-from .events import Event, effective_stiffness, find_event, released_extension
+from .events import (
+    Event,
+    Stiffness,
+    effective_stiffness,
+    find_event,
+    released_extension,
+    stiffness_before_rip,
+)
 from .fits import fit_ssdna_fjc, fit_ssdna_wlc
 from .rupture import rupture_rates, rupture_statistics
 from .split import (
@@ -10,6 +17,7 @@ from .split import (
     read_tweezers_trace,
     split_by_status,
     split_cycles,
+    split_cycles_adaptive,
     write_segments,
 )
 from .stretching import StretchFit, StretchModel, fit_stretching_model
@@ -24,6 +32,7 @@ __all__ = [
     "StretchModel",
     "UnzippingSetup",
     "align_curves",
+    "Stiffness",
     "effective_stiffness",
     "equilibrium_fdc",
     "find_event",
@@ -39,5 +48,7 @@ __all__ = [
     "rupture_statistics",
     "split_by_status",
     "split_cycles",
+    "split_cycles_adaptive",
+    "stiffness_before_rip",
     "write_segments",
 ]

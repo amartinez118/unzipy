@@ -164,3 +164,85 @@ def effective_stiffness(x, f, x_range=None):
         x, f = x[keep], f[keep]
     p, cov = np.polyfit(x, f, 1, cov=True)
     return float(p[0]), float(np.sqrt(cov[0, 0]))
+
+
+@dataclass
+class Stiffness:
+    """Effective stiffness measured just before the rips.
+
+    Attributes:
+        k (float): Median slope of the folded branch (pN/nm).
+        err (float): Bootstrap standard error of the median (pN/nm).
+        n (int): Number of trajectories used.
+        slopes (numpy.ndarray): Slope of each trajectory (pN/nm).
+    """
+
+    k: float
+    err: float
+    n: int
+    slopes: np.ndarray
+
+
+def stiffness_before_rip(
+    trajectories,
+    rips,
+    window=10.0,
+    guard=1.0,
+    min_points=25,
+    n_boot=300,
+    rng=None,
+):
+    """Measure the effective stiffness as the slope just before the rip.
+
+    The effective stiffness of the setup (trap and handles in series) that
+    enters ``contributions(..., handles="spring")`` is the slope of the
+    force-extension curve of the folded branch at the force of the rip, where
+    the handles are stiffer than at low force. For each unfolding trajectory
+    the force is fitted linearly against the extension over the ``window`` nm
+    that end ``guard`` nm before its rip; the stiffness is the median over
+    trajectories.
+
+    The result is statistically demanding: the handle energy of the
+    effective-stiffness method is hundreds of kT, so a 1% error of the
+    stiffness shifts the free energy by several kT. Check the error and the
+    dependence on ``window``.
+
+    Args:
+        trajectories (list[tuple]): Unfolding trajectories as ``(x, f)``
+            pairs of extension (nm) and force (pN) in time order.
+        rips (list[Event | float]): The rip of each trajectory, as an
+            :class:`Event` or its extension (nm).
+        window (float): Length of the fitted range (nm).
+        guard (float): Distance between the end of the range and the rip
+            (nm), which keeps the fit clear of the jump.
+        min_points (int): Minimum samples in the range; trajectories with
+            fewer are skipped.
+        n_boot (int): Bootstrap resamples of the trajectories.
+        rng (int | numpy.random.Generator | None): Seed or generator.
+
+    Returns:
+        Stiffness: Median slope, its error and the per-trajectory slopes.
+
+    Raises:
+        ValueError: If the inputs differ in length, ``window`` or ``guard`` is
+            not positive, or no trajectory has enough points.
+    """
+    if len(trajectories) != len(rips):
+        raise ValueError("one rip per trajectory is required")
+    if window <= 0 or guard < 0:
+        raise ValueError("window must be positive and guard non-negative")
+    slopes = []
+    for (x, f), rip in zip(trajectories, rips, strict=True):
+        x, f = np.asarray(x, float), np.asarray(f, float)
+        x_rip = rip.extension if isinstance(rip, Event) else float(rip)
+        sel = (x >= x_rip - guard - window) & (x <= x_rip - guard)
+        if sel.sum() >= min_points and np.ptp(x[sel]) > 0:
+            slopes.append(np.polyfit(x[sel], f[sel], 1)[0])
+    if not slopes:
+        raise ValueError("no trajectory has enough points before its rip")
+    slopes = np.array(slopes)
+    gen = np.random.default_rng(rng)
+    boot = np.median(gen.choice(slopes, size=(n_boot, slopes.size)), axis=1)
+    return Stiffness(
+        float(np.median(slopes)), float(boot.std()), slopes.size, slopes
+    )

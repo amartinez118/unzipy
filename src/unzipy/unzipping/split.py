@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
+from scipy.signal import find_peaks, peak_prominences
 
 
 @dataclass
@@ -83,6 +84,166 @@ def split_cycles(t, f, f_min, f_max, gap=1.0):
             Segment("u" if e0 == "min" else "f", slice(i0 + 1, i1))
         )
     return segments
+
+
+def _default_prominence(fs):
+    """Return a prominence threshold separating cycles from other bumps.
+
+    The prominences of all extrema above 1% of the force range are sorted
+    and grouped at gaps of a factor of 3 or more: tiny bumps (noise, rips),
+    the cycle turning points and a few huge excursions form separate groups.
+    The cycles are the group with the largest total prominence (count times
+    typical size), and the threshold is 60% of its 10th percentile.
+
+    Args:
+        fs (numpy.ndarray): Smoothed force (pN).
+
+    Returns:
+        float: Prominence threshold (pN).
+    """
+    lo, hi = np.percentile(fs, [1, 99])
+    floor = 0.01 * (hi - lo)
+    cand = []
+    for sig in (fs, -fs):
+        idx, _ = find_peaks(sig, prominence=floor)
+        if idx.size:
+            cand.append(peak_prominences(sig, idx)[0])
+    if not cand:
+        return float(max(floor, np.finfo(float).tiny))
+    prom = np.sort(np.concatenate(cand))
+    cuts = np.flatnonzero(prom[1:] / prom[:-1] >= 3.0) + 1
+    groups = np.split(prom, cuts)
+    best = max(groups, key=lambda g: g.size * np.median(g))
+    return 0.6 * float(np.percentile(best, 10))
+
+
+def split_cycles_adaptive(
+    t,
+    f,
+    x=None,
+    prominence=None,
+    smooth=51,
+    min_gap=0.3,
+    refine=60,
+):
+    """Split a trace into unfolding and folding segments without limits.
+
+    Unlike :func:`split_cycles`, no force thresholds are needed, so cycles are
+    found even when the protocol limits change during a run. The turning
+    points are the alternating maxima and minima of the smoothed force whose
+    prominence exceeds a fraction of the cycle amplitude; two maxima (or two
+    minima) in a row are merged keeping the more extreme one. If the trap
+    position is given, each turning point is moved to the extremum of the
+    position within ``refine`` samples, which is sharper than the noisy force
+    plateau at the limit.
+
+    Segments run between consecutive turning points, from the first sample
+    of one up to (not including) the first sample of the next: ``"u"`` (force
+    increasing) from a minimum to a maximum and ``"f"`` from a maximum to a
+    minimum.
+
+    Args:
+        t (array-like): Time (s), increasing.
+        f (array-like): Force (pN).
+        x (array-like | None): Trap position (nm) used to refine the turning
+            points; the sign of its correlation with the force in each
+            segment decides which extremum is taken.
+        prominence (float | None): Minimum prominence of a turning point of
+            the smoothed force (pN). By default it is estimated from the
+            trace as 60% of the smallest typical cycle amplitude, which
+            assumes that cycles are present.
+        smooth (int): Length of the moving average of the force (samples).
+        min_gap (float): Minimum time between turning points (s).
+        refine (int): Half-width of the refinement window (samples); 0
+            disables it.
+
+    Returns:
+        list[Segment]: Segments in time order.
+
+    Raises:
+        ValueError: If the arrays differ in length, are too short, or
+            ``smooth``, ``min_gap`` or ``refine`` are invalid.
+    """
+    t, f = np.asarray(t, float), np.asarray(f, float)
+    if t.shape != f.shape or t.ndim != 1:
+        raise ValueError("t and f must be one-dimensional of the same length")
+    if x is not None:
+        x = np.asarray(x, float)
+        if x.shape != f.shape:
+            raise ValueError("x must have the same length as f")
+    if smooth < 1 or min_gap <= 0 or refine < 0:
+        raise ValueError("smooth >= 1, min_gap > 0 and refine >= 0 required")
+    if f.size < 3 * smooth:
+        raise ValueError("trace too short for the smoothing length")
+    dt = np.diff(t)
+    dt = dt[dt > 0]
+    if dt.size == 0:
+        raise ValueError("time must increase")
+    fs = np.convolve(f, np.ones(smooth) / smooth, mode="same")
+    if prominence is None:
+        prominence = _default_prominence(fs)
+    distance = max(int(min_gap / np.median(dt)), 1)
+    peaks, _ = find_peaks(fs, prominence=prominence, distance=distance)
+    troughs, _ = find_peaks(-fs, prominence=prominence, distance=distance)
+    events = sorted(
+        [(i, "max") for i in peaks] + [(i, "min") for i in troughs]
+    )
+    turns = []
+    for i, kind in events:
+        if turns and turns[-1][1] == kind:
+            j = turns[-1][0]
+            if (fs[i] > fs[j]) == (kind == "max"):
+                turns[-1] = (i, kind)
+        else:
+            turns.append((i, kind))
+    segments = []
+    for (i0, k0), (i1, _) in itertools.pairwise(turns):
+        segments.append(Segment("u" if k0 == "min" else "f", slice(i0, i1)))
+    if x is not None and refine > 0:
+        segments = _refine_turns(f, x, segments, refine)
+    return segments
+
+
+def _refine_turns(f, x, segments, window):
+    """Move the boundaries of segments to the position extrema.
+
+    Args:
+        f (numpy.ndarray): Force (pN).
+        x (numpy.ndarray): Trap position (nm).
+        segments (list[Segment]): Segments from the force extrema.
+        window (int): Half-width of the search window (samples).
+
+    Returns:
+        list[Segment]: Segments with refined boundaries.
+    """
+
+    def extremum(i, want_max):
+        lo, hi = max(i - window, 0), min(i + window, x.size)
+        j = np.argmax(x[lo:hi]) if want_max else np.argmin(x[lo:hi])
+        return lo + int(j)
+
+    out = []
+    for s in segments:
+        a, b = s.slice.start, s.slice.stop
+        sel = slice(a, b)
+        if b - a < 3 or np.ptp(f[sel]) == 0 or np.ptp(x[sel]) == 0:
+            out.append(s)
+            continue
+        sign = np.sign(np.corrcoef(f[sel], x[sel])[0, 1])
+        if sign == 0:
+            out.append(s)
+            continue
+        up = s.kind == "u"
+        # force rising with position: unfolding starts at the position
+        # minimum and ends at the maximum
+        start_max = up != (sign > 0)
+        out.append(
+            Segment(
+                s.kind,
+                slice(extremum(a, start_max), extremum(b, not start_max)),
+            )
+        )
+    return out
 
 
 def read_tweezers_trace(
