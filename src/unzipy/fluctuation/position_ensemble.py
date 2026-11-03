@@ -315,7 +315,9 @@ def contributions(f_min, f_max, model=None, k_eff=None, handles="spring"):
         f_max (float): Force of the unfolded state (pN).
         model (PullingModel | None): Elastic parameters; defaults if None.
         k_eff (float | None): Effective stiffness (pN/nm) of trap and handles,
-            required for ``handles="spring"``.
+            required for ``handles="spring"``. Measure it as the slope of the
+            folded branch just before the rip (see
+            :func:`unzipy.unzipping.stiffness_before_rip`), not at low force.
         handles (str): ``"spring"`` (effective stiffness) or ``"wlc"``.
 
     Returns:
