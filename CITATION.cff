@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "unzipy"
+abstract: "Single-molecule force spectroscopy and nonequilibrium statistical physics: polymer elasticity, fluctuation theorems, unzipping analysis."
+authors:
+  - given-names: "Alvaro M"
+    family-names: "Monge"
+    orcid: "https://orcid.org/0000-0002-3243-428X"
+license: MIT
+repository-code: "https://github.com/amartinez118/unzipy"
+keywords:
+  - single-molecule
+  - force spectroscopy
+  - optical tweezers
+  - fluctuation theorems
+  - free energy
+  - DNA hairpin
+  - worm-like chain
