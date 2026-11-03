@@ -163,7 +163,10 @@ def bias_critical(n, mu, delta=2.0, alpha=0.0, q=None, d_c=None):
 def bias_power_law(n, d_mean):
     """Return the empirical power-law bias for Gaussian work (eq. 7).
 
-    ``<B_N> = <D> N**(-z)`` with ``z = -ln(ln 2 / <D>) / <D>``.
+    ``<B_N> = <D> N**(-z)`` with ``z = -ln(ln 2 / <D>) / <D>``. The exponent
+    is positive, so that the bias decreases with ``N``, only for ``<D> > ln
+    2``; below that the fit does not apply (the bias there is already small
+    and the formula would grow with ``N``).
 
     Args:
         n (int): Number of work values.
@@ -171,7 +174,14 @@ def bias_power_law(n, d_mean):
 
     Returns:
         float: Bias in kT.
+
+    Raises:
+        ValueError: If ``d_mean <= ln 2``, where the power law is invalid.
     """
+    if d_mean <= np.log(2.0):
+        raise ValueError(
+            f"the power law of eq. 7 needs <D> > ln 2 (got {d_mean:.3g} kT)"
+        )
     z = -np.log(np.log(2.0) / d_mean) / d_mean
     return d_mean * n ** (-z)
 
@@ -187,8 +197,11 @@ def bias(n, mu, delta=2.0, alpha=0.0, q=None, d_c=None):
 
     The expression is chosen by regime: eq. 5 for ``lambda < 0.45``, eq. 6 up
     to ``lambda = 1.3``, and beyond that the empirical power law of eq. 7 for
-    ``delta = 2`` (with ``<D> = mu``) or eq. 6 otherwise. The result is never
-    negative.
+    ``delta = 2`` and ``mu > ln 2`` (with ``<D> = mu``), the scaling-limit
+    bias of eq. 4 for ``delta = 2`` and ``mu <= ln 2`` (where the power law
+    does not apply), or eq. 6 otherwise. The result is limited to the range
+    from zero to the characteristic dissipation, the bias of a single work
+    value.
 
     Args:
         n (int): Number of work values.
@@ -200,16 +213,19 @@ def bias(n, mu, delta=2.0, alpha=0.0, q=None, d_c=None):
         d_c (float | None): Characteristic dissipation; ``mu`` if None.
 
     Returns:
-        float: Non-negative bias in kT.
+        float: Bias in kT, between 0 and ``d_c``.
     """
     lam = float(scaling_lambda(n, mu, delta))
+    d_c_val = mu if d_c is None else d_c
     if lam < LAMBDA_EXTREME:
         b = bias_extreme(n, mu, delta, alpha, q, d_c)
     elif lam <= LAMBDA_CRITICAL or delta != 2.0:
         b = bias_critical(n, mu, delta, alpha, q, d_c)
-    else:
+    elif mu > np.log(2.0):
         b = bias_power_law(n, mu)
-    return float(max(b, 0.0))
+    else:  # converged regime with small dissipation: scaling-limit bias
+        b = bias_rem(n, mu, d_c, delta)
+    return float(min(max(b, 0.0), max(d_c_val, 0.0)))
 
 
 def gaussian_bias(n, variance, method="auto"):
@@ -337,6 +353,10 @@ def jarzynski_corrected(w, delta=2.0, w_c=None, method="auto"):
     ``dF*_N = dF_N - <B_N>``. The tail parameters are fitted by maximum
     likelihood at fixed ``delta`` (2 for near-Gaussian tails; the result
     depends strongly on it for non-Gaussian work) and ``Dc`` is set to ``mu``.
+    The tail fit uses the spread of all values below ``Wc``, so a single
+    non-physical work (for example from a trajectory that does not span the
+    integration range) inflates ``mu`` and the bias; remove such outliers
+    first.
 
     Args:
         w (array-like): Work values (kT) of one direction.
