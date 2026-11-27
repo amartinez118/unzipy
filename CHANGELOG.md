@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.1 - 2026-11-27
+
 ## 0.3.0 - 2026-11-27
 
 - Drop Python 3.10 (the fixed Pillow and filelock releases require ≥ 3.11); resolves the Dependabot alerts.
