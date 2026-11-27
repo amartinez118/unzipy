@@ -28,7 +28,7 @@ may still change before 1.0.
 pip install unzipy
 ```
 
-Requires Python ≥ 3.10, numpy ≥ 2.0 and scipy ≥ 1.13. Optional extras: `unzipy[fast]` (numba, faster
+Requires Python ≥ 3.11, numpy ≥ 2.0 and scipy ≥ 1.13. Optional extras: `unzipy[fast]` (numba, faster
 curve alignment), `unzipy[plot]` (matplotlib), for example
 `pip install "unzipy[fast,plot]"`.
 

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Drop Python 3.10 (the fixed Pillow and filelock releases require ≥ 3.11); resolves the Dependabot alerts.
+
 ## 0.2.0 - 2026-11-03
 
 - Development and CI use uv (`uv.lock`).

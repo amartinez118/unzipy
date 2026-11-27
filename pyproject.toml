@@ -15,14 +15,13 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Physics",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [{ name = "Alvaro M Monge", email = "139244816+amartinez118@users.noreply.github.com" }]
 dependencies = ["numpy>=2.0", "scipy>=1.13"]
 
@@ -71,5 +70,5 @@ convention = "google"
 
 [tool.pyright]
 include = ["src"]
-pythonVersion = "3.10"
+pythonVersion = "3.11"
 typeCheckingMode = "basic"
